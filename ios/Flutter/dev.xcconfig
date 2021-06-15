@@ -1,0 +1,5 @@
+FLUTTER_FLAVOR=dev
+PRODUCT_BUNDLE_IDENTIFIER=com.doryan.freshwatch.dev
+DISPLAY_NAME=FreshWatch Dev
+FLUTTER_TARGET=lib/main.dart
+ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-development
