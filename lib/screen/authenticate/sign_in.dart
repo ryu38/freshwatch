@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:freshwatch/services/auth.dart';
+import 'package:freshwatch/features/auth.dart';
 import 'package:freshwatch/widgets/title.dart';
 
 class SignIn extends StatefulWidget {
