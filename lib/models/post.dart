@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:freshwatch/features/database.dart';
 
@@ -25,7 +27,7 @@ class VegePost {
   };
 }
 
-class AllVegePosts {
+class AllVegePosts with ChangeNotifier {
 
   static Future<AllVegePosts> init() async {
     final allPosts = await Database.loadAllPostLocal();
@@ -36,23 +38,60 @@ class AllVegePosts {
 
   late Map<String, dynamic> _posts;
   Map<String, dynamic> get posts => _posts;
+
+  Future<void> update() async {
+    _posts = await Database.loadAllPostLocal();
+    notifyListeners();
+  }
 }
 
 class DailyVegePosts with ChangeNotifier {
 
   DailyVegePosts(
+    this._allPosts,
     this._date,
-    this._posts,
-  );
+  ) {
+    final dailyPostsJson = _allPosts.posts[_date] as String?;
+    if (dailyPostsJson != null) {
+      final targetPosts = jsonDecode(dailyPostsJson) as List<dynamic>;
+      _posts = targetPosts.map<VegePost>((dynamic val) {
+        final postJson = json.decode(val as String) as Map<String, dynamic>;
+        return VegePost.fromJson(postJson);
+      }).toList();
+    } else {
+      _posts = <VegePost>[];
+    }
+  }
   
+  final AllVegePosts _allPosts;
   final String _date;
-  List<VegePost> _posts;
+  late List<VegePost> _posts;
 
   String get date => _date;
   List<VegePost> get posts => _posts;
 
-  void addPost(VegePost newPost) {
-    _posts.add(newPost);
+  Future<void> _reflect() async {
+    final result = await Database.addPostLocal(this);
+    if (result) {
+      await _allPosts.update();
+    } else {
+      _posts.removeLast();
+    }
     notifyListeners();
+  }
+
+  Future<void> addPost(VegePost newPost) async {
+    _posts.add(newPost);
+    await _reflect();
+  }
+
+  Future<void> updatePost(int index, VegePost newPost) async {
+    _posts[index] = newPost;
+    await _reflect();
+  }
+
+  Future<void> deletePost(int index) async {
+    _posts.removeAt(index);
+    await _reflect();
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:freshwatch/features/database.dart';
 import 'package:freshwatch/models/post.dart';
@@ -27,46 +25,53 @@ class _HomeState extends State<Home> {
             body: Text('Loading'),
           );
         } else {
-          return Provider<AllVegePosts>(
+          return ChangeNotifierProvider<AllVegePosts>(
             create: (_) => snapshot.data!,
             child: Scaffold(
-              body: Container(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 15),
-                      child: AppTitle(),
-                    ),
-                    const DashboardCard(
-                      backgroundColor: Color(0xff56ad54),
-                      content: Text(
-                        'You should eat 350g of vegetables everyday !',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+              body: SingleChildScrollView(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20, horizontal: 10
+                  ),
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 25, horizontal: 15
+                        ),
+                        child: AppTitle(),
+                      ),
+                      const DashboardCard(
+                        backgroundColor: Color(0xff56ad54),
+                        content: Text(
+                          'You should eat 350g of vegetables everyday !',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                    DashboardCard(
-                      content: DailyVeges(date: '19062021'),
-                    ),
-                    DashboardCard(
-                      content: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () async {
-                              print(await Database.printSP);
-                            }, 
-                            child: const Text('print shared preferences'),
-                          ),
-                        ],
+                      const DashboardCard(
+                        content: DailyVeges(date: '19062021'),
                       ),
-                    ),
-                  ],
+                      DashboardCard(
+                        content: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () async {
+                                print(await Database.printSP);
+                              }, 
+                              child: const Text('print shared preferences'),
+                            ),
+                            _Test(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -74,5 +79,14 @@ class _HomeState extends State<Home> {
         }
       }
     );
+  }
+}
+
+class _Test extends StatelessWidget {
+  const _Test({ Key? key }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(Provider.of<AllVegePosts>(context).posts.toString());
   }
 }

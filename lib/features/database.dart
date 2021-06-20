@@ -16,7 +16,7 @@ class Database {
     return jsonDecode(allPostsJson) as Map<String, dynamic>;
   }
 
-  static Future<bool> addDataLocal(DailyVegePosts dailyPosts) async {
+  static Future<bool> addPostLocal(DailyVegePosts dailyPosts) async {
 
     final posts = dailyPosts.posts;
     final date = dailyPosts.date;

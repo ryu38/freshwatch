@@ -72,14 +72,8 @@ class _PostFormState extends State<PostForm> {
                     final newPost = VegePost(
                       name: _name, gram: _gram,
                     );
-                    _dailyPosts.addPost(newPost);
-                    final result = await Database.addDataLocal(_dailyPosts);
-                    if (result) {
-                      print('hello');
-                      Navigator.pop(context);
-                    } else {
-                      print('error occured!');
-                    }
+                    await _dailyPosts.addPost(newPost);
+                    Navigator.pop(context);
                   }
                 },
               ),
