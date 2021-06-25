@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:freshwatch/features/database.dart';
+import 'package:intl/intl.dart';
 
 class VegePost {
 
@@ -29,15 +30,23 @@ class VegePost {
 
 class AllVegePosts with ChangeNotifier {
 
-  static Future<AllVegePosts> init() async {
-    final allPosts = await Database.loadAllPostLocal();
-    final instance = AllVegePosts()
-      .._posts = allPosts;
-    return instance;
-  }
+  AllVegePosts(
+    this._posts,
+    this._startDate
+  );
 
-  late Map<String, dynamic> _posts;
+  Map<String, dynamic> _posts;
+  final DateTime _startDate;
+
   Map<String, dynamic> get posts => _posts;
+  int get dayLength => _posts.length;
+  DateTime get startDate => _startDate;
+
+  static Future<AllVegePosts> init() async {
+    final posts = await Database.loadAllPostLocal();
+    final startDate = await Database.loadStartDate();
+    return AllVegePosts(posts, startDate);
+  }
 
   Future<void> update() async {
     _posts = await Database.loadAllPostLocal();
@@ -49,8 +58,20 @@ class DailyVegePosts with ChangeNotifier {
 
   DailyVegePosts(
     this._allPosts,
-    this._date,
+    DateTime date,
   ) {
+    init(date);
+  }
+  
+  final AllVegePosts _allPosts;
+  late String _date;
+  late List<VegePost> _posts;
+
+  String get date => _date;
+  List<VegePost> get posts => _posts;
+
+  void init(DateTime date) {
+    _date = DateFormat('yyyy/MM/dd').format(date);
     final dailyPostsJson = _allPosts.posts[_date] as String?;
     if (dailyPostsJson != null) {
       final targetPosts = jsonDecode(dailyPostsJson) as List<dynamic>;
@@ -62,13 +83,6 @@ class DailyVegePosts with ChangeNotifier {
       _posts = <VegePost>[];
     }
   }
-  
-  final AllVegePosts _allPosts;
-  final String _date;
-  late List<VegePost> _posts;
-
-  String get date => _date;
-  List<VegePost> get posts => _posts;
 
   Future<void> _reflect() async {
     final result = await Database.addPostLocal(this);
@@ -93,5 +107,9 @@ class DailyVegePosts with ChangeNotifier {
   Future<void> deletePost(int index) async {
     _posts.removeAt(index);
     await _reflect();
+  }
+
+  void printTest() {
+    print(_allPosts._posts);
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:freshwatch/features/database.dart';
 import 'package:freshwatch/models/post.dart';
 import 'package:provider/provider.dart';
 

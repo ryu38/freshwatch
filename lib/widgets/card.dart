@@ -16,6 +16,7 @@ class DashboardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 2.5),
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(

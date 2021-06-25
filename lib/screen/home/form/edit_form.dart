@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:freshwatch/features/database.dart';
 import 'package:freshwatch/models/post.dart';
 import 'package:provider/provider.dart';
 
@@ -27,8 +26,8 @@ class _EditFormState extends State<EditForm> {
   @override
   Widget build(BuildContext context) {
 
-    final _dailyPosts = Provider.of<DailyVegePosts>(context, listen: false);
-    final _targetPost = _dailyPosts.posts[widget.index];
+    final dailyPosts = Provider.of<DailyVegePosts>(context, listen: false);
+    final targetPost = dailyPosts.posts[widget.index];
 
     return Form(
       key: _formKey,
@@ -45,14 +44,17 @@ class _EditFormState extends State<EditForm> {
             ),
           ),
           TextFormField(
-            initialValue: _targetPost.name,
+            initialValue: targetPost.name,
             validator: (val) => val?.isEmpty == true ? 'Enter a name' : null,
             onChanged: (val) {
               setState(() => _name = val);
             },
+            onSaved: (val) {
+              setState(() => _name = val ?? '');
+            },
           ),
           TextFormField(
-            initialValue: _targetPost.gram.toString(),
+            initialValue: targetPost.gram.toString(),
             keyboardType: TextInputType.number,
             inputFormatters: <TextInputFormatter>[
               FilteringTextInputFormatter.digitsOnly,
@@ -60,6 +62,10 @@ class _EditFormState extends State<EditForm> {
             validator: (val) => val == '' ? 'Enter an amount' : null,
             onChanged: (val) {
               final valueNum = val == '' ? 0 : int.parse(val);
+              setState(() => _gram = valueNum);
+            },
+            onSaved: (val) {
+              final valueNum = ['', null].contains(val) ? 0 : int.parse(val!);
               setState(() => _gram = valueNum);
             },
           ),
@@ -78,10 +84,11 @@ class _EditFormState extends State<EditForm> {
                 child: const Text('add'),
                 onPressed: () async {
                   if (_formKey.currentState?.validate() == true) {
+                    _formKey.currentState?.save();
                     final newPost = VegePost(
                       name: _name, gram: _gram,
                     );
-                    await _dailyPosts.updatePost(widget.index, newPost);
+                    await dailyPosts.updatePost(widget.index, newPost);
                     Navigator.pop(context);
                   }
                 },

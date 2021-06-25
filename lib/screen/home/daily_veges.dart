@@ -1,32 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
 import 'package:freshwatch/screen/home/form/edit_form.dart';
 import 'package:freshwatch/screen/home/form/post_form.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class DailyVeges extends StatelessWidget {
-  const DailyVeges({
-     Key? key,
-     required this.date,
-  }) : super(key: key);
+  DailyVeges(
+    this.date, 
+    { Key? key }
+  ) :
+    dateFmt = DateFormat('yyyy/MM/dd').format(date),
+    super(key: key);
 
-  final String date;
+  final DateTime date;
+  final String dateFmt;
 
   @override
   Widget build(BuildContext context) {
 
     final allPosts = Provider.of<AllVegePosts>(context, listen: false);
 
-    return ChangeNotifierProvider<DailyVegePosts>(
+    return ChangeNotifierProxyProvider2<AllVegePosts, DateModel, DailyVegePosts>(
       create: (_) => DailyVegePosts(allPosts, date),
-      child: const _Content(),
+      update: (_, allVegePosts, dateModel, dailyVegePosts) {
+        dailyVegePosts!.init(date);
+        return dailyVegePosts;
+      },
+      child: _Content(date),
     );
   }
 }
 
 class _Content extends StatelessWidget {
   
-  const _Content({ Key? key }) : super(key: key);
+  _Content(
+    this.date,
+    { Key? key }
+  ) : 
+    dateFmt = DateFormat('MM/dd E').format(date),
+    super(key: key);
+
+  final DateTime date;
+  final String dateFmt;
 
   void _showModalBottomSheet({
     required BuildContext context, required Widget child }) {
@@ -57,16 +74,16 @@ class _Content extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     
-    final _dailyPosts = Provider.of<DailyVegePosts>(context);
+    final dailyPosts = Provider.of<DailyVegePosts>(context);
 
     return Column(
       children: <Widget>[
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            const Text(
-              "today's veges",
-              style: TextStyle(
+            Text(
+              dateFmt,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -78,17 +95,20 @@ class _Content extends StatelessWidget {
             ),
           ],
         ),
-        Container(
+        const SizedBox(height: 15),
+        MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
           child: ListView.builder(
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
-            itemCount: _dailyPosts.posts.length,
+            itemCount: dailyPosts.posts.length,
             itemBuilder: (BuildContext context, int index) {
-              final post = _dailyPosts.posts[index];
+              final post = dailyPosts.posts[index];
               return Dismissible(
                 key: ObjectKey(post),
                 onDismissed: (direction) async {
-                  await _dailyPosts.deletePost(index);
+                  await dailyPosts.deletePost(index);
                 },
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -164,7 +184,7 @@ class _Content extends StatelessWidget {
               ],
             ),
           ),
-        )
+        ),
       ],
     );
   }
