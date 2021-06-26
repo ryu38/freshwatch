@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:freshwatch/features/database.dart';
 import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
+import 'package:freshwatch/screen/home/bar_chart.dart';
 import 'package:freshwatch/screen/home/daily_veges.dart';
 import 'package:freshwatch/screen/home/history.dart';
 import 'package:freshwatch/screen/home/home_scaffold.dart';
@@ -103,6 +104,9 @@ class __ContentState extends State<_Content> {
           ),
           DashboardCard(
             content: DailyVeges(date.today),
+          ),
+          DashboardCard(
+            content: BarChart(),
           ),
           DashboardCard(
             content: Column(

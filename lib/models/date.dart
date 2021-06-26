@@ -12,7 +12,7 @@ class DateModel with ChangeNotifier {
 
   void init() {
     final now = DateTime.now();
-    _today = DateTime(now.year, now.month, now.day);
+    _today = DateTime(now.year, now.month, now.day + 1);
   }
 
   void update() {

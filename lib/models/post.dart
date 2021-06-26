@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:freshwatch/features/database.dart';
+import 'package:freshwatch/screen/home/daily_veges.dart';
 import 'package:intl/intl.dart';
 
 class VegePost {
@@ -58,21 +59,21 @@ class DailyVegePosts with ChangeNotifier {
 
   DailyVegePosts(
     this._allPosts,
-    DateTime date,
+    this._date,
   ) {
-    init(date);
+    init(_date);
   }
   
   final AllVegePosts _allPosts;
-  late String _date;
+  late DateTime _date;
   late List<VegePost> _posts;
 
-  String get date => _date;
+  DateTime get date => _date;
   List<VegePost> get posts => _posts;
 
   void init(DateTime date) {
-    _date = DateFormat('yyyy/MM/dd').format(date);
-    final dailyPostsJson = _allPosts.posts[_date] as String?;
+    final dateFmt = DateFormat('yyyy/MM/dd').format(date);
+    final dailyPostsJson = _allPosts.posts[dateFmt] as String?;
     if (dailyPostsJson != null) {
       final targetPosts = jsonDecode(dailyPostsJson) as List<dynamic>;
       _posts = targetPosts.map<VegePost>((dynamic val) {
@@ -91,7 +92,6 @@ class DailyVegePosts with ChangeNotifier {
     } else {
       _posts.removeLast();
     }
-    notifyListeners();
   }
 
   Future<void> addPost(VegePost newPost) async {
@@ -109,7 +109,42 @@ class DailyVegePosts with ChangeNotifier {
     await _reflect();
   }
 
+  double getTotalGram() {
+    var totalGram = 0.0;
+    for (final post in _posts) {
+      totalGram = totalGram + post.gram;
+    }
+    return totalGram;
+  }
+
   void printTest() {
     print(_allPosts._posts);
+  }
+}
+
+class DailyVegePostsInSpan {
+
+  DailyVegePostsInSpan(
+    this._allPosts,
+    DateTime from,
+    DateTime to
+  ) {
+    init(from, to);
+  }
+
+  final AllVegePosts _allPosts;
+  late List<DailyVegePosts> _posts;
+
+  List<DailyVegePosts> get posts => _posts;
+
+  void init(DateTime from, DateTime to) {
+    final posts = <DailyVegePosts>[];
+    final dateSpan = to.difference(from).inDays;
+    for (var d = 0; d <= dateSpan; d++) {
+      posts.add(
+        DailyVegePosts(_allPosts, from.add(Duration(days: d)))
+      );
+    }
+    _posts = posts;
   }
 }

@@ -192,7 +192,7 @@ class _Content extends StatelessWidget {
   }
 }
 
-class _Bar350g extends StatefulWidget {
+class _Bar350g extends StatelessWidget {
   const _Bar350g({ 
     required this.size,
     Key? key
@@ -202,30 +202,11 @@ class _Bar350g extends StatefulWidget {
   final double size;
 
   @override
-  __Bar350gState createState() => __Bar350gState();
-}
-
-class __Bar350gState extends State<_Bar350g> {
-
-  double _calcDailyGram(BuildContext context) {
-    final dailyPosts = Provider.of<DailyVegePosts>(context).posts;
-    var totalGram = 0.0;
-    for (final post in dailyPosts) {
-      totalGram = totalGram + post.gram;
-      if (totalGram >= 350) {
-        totalGram = 350;
-        break;
-      }
-    }
-    return totalGram;
-  }
-
-  @override
   Widget build(BuildContext context) {
 
-    final size = widget.size;
-    final dailyGram = _calcDailyGram(context);
-    final opacity = dailyGram == 350.0 ? 1.0 : .0;
+    var dailyGram = Provider.of<DailyVegePosts>(context).getTotalGram();
+    dailyGram = dailyGram >= 350 ? 350 : dailyGram;
+    final opacity = dailyGram == 350 ? 1.0 : .0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -250,7 +231,7 @@ class __Bar350gState extends State<_Bar350g> {
           padding: const EdgeInsets.only(left: 6),
           child: Opacity(
             opacity: opacity,
-            child: Icon(
+            child: const Icon(
               Icons.check,
               size: 20,
             ),

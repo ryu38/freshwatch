@@ -41,7 +41,7 @@ class Database {
   static Future<bool> addPostLocal(DailyVegePosts dailyPosts) async {
 
     final posts = dailyPosts.posts;
-    final date = dailyPosts.date;
+    final date = DateFormat('yyyy/MM/dd').format(dailyPosts.date);
 
     final database = await loadAllPostLocal();
     if (!posts.isEmpty) {
