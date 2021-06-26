@@ -5,6 +5,7 @@ import 'package:freshwatch/models/post.dart';
 import 'package:freshwatch/screen/home/daily_veges.dart';
 import 'package:freshwatch/screen/home/history.dart';
 import 'package:freshwatch/screen/home/home_scaffold.dart';
+import 'package:freshwatch/theme/colors.dart';
 import 'package:freshwatch/widgets/card.dart';
 import 'package:freshwatch/widgets/title.dart';
 import 'package:intl/intl.dart';
@@ -91,7 +92,7 @@ class __ContentState extends State<_Content> {
             child: AppTitle(),
           ),
           const DashboardCard(
-            backgroundColor: Color(0xff56ad54),
+            backgroundColor: AppColors.main,
             content: Text(
               'You should eat 350g of vegetables everyday !',
               style: TextStyle(
