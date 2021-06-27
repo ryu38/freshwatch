@@ -11,8 +11,8 @@ class BarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    final allPosts = Provider.of<AllVegePosts>(context, listen: false);
-    final today = Provider.of<DateModel>(context, listen: false).today;
+    final allPosts = Provider.of<AllVegePosts>(context);
+    final today = Provider.of<DateModel>(context).today;
     final from = today.add(const Duration(days: 6) * -1);
 
     return ProxyProvider2<AllVegePosts, DateModel, DailyVegePostsInSpan>(
@@ -31,15 +31,18 @@ class _Content extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    final posts = Provider.of<DailyVegePostsInSpan>(context, listen: false).posts;
+    final posts = Provider.of<DailyVegePostsInSpan>(context).posts;
     const size = 200.0;
     const maxGram = 500.0;
 
     Row dailyGramBars() {
       final bars = <Widget>[];
+
       for (final post in posts) {
+
         var gram = post.getTotalGram();
         gram = gram >= maxGram ? maxGram : gram;
+
         final bar = SizedBox(
           height: size,
           child: Align(
@@ -49,31 +52,27 @@ class _Content extends StatelessWidget {
               child: AnimatedContainer(
                 width: 14,
                 height: size * (gram / maxGram),
-                color: AppColors.main,
+                color: gram >= 350 ? AppColors.main : AppColors.light,
                 duration: const Duration(milliseconds: 500),
               ),
             ),
           ),
         );
 
-        final Widget label;
-        if (post.date != Provider.of<DateModel>(context).today) {
-          final date = DateFormat('E').format(post.date);
-          label = Container(
+        final label = post.date != Provider.of<DateModel>(context).today
+          ? Container(
             width: double.infinity,
             margin: const EdgeInsets.symmetric(horizontal: 2),
             padding: const EdgeInsets.all(4),
             child: Center(
               child: Text(
-                date,
+                DateFormat('E').format(post.date),
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 14),
               ),
             )
-          );
-        } else {
-          const date = 'today';
-          label = Container(
+          )
+          : Container(
             width: double.infinity,
             margin: const EdgeInsets.symmetric(horizontal: 2),
             padding: const EdgeInsets.all(4),
@@ -83,16 +82,15 @@ class _Content extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                date,
+                'today',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   color: Colors.white
                 ),
               ),
             )
           );
-        }
 
         bars.add(
           Expanded(
@@ -137,13 +135,38 @@ class _Content extends StatelessWidget {
       );
     }
 
-    return Column(
-      children: <Widget>[
-        Stack(
-          children: [
-            dailyGramBars(),
-            scale(),
-          ],
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: size,
+          child: Stack(
+            children: [
+              const Align(
+                alignment: Alignment(0, (350 / maxGram) * -2 + 1),
+                child: Text(
+                  '350g',
+                  style: TextStyle(fontSize: 12),
+                )
+              ),
+              const Align(
+                alignment: Alignment.bottomCenter,
+                child: Text(
+                  '0g',
+                  style: TextStyle(fontSize: 12),
+                )
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Stack(
+            children: [
+              scale(),
+              dailyGramBars()
+            ],
+          ),
         ),
       ],
     );

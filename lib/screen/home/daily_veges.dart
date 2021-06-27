@@ -121,7 +121,7 @@ class _Content extends StatelessWidget {
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 15),
+                    padding: const EdgeInsets.only(bottom: 15),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
@@ -132,7 +132,7 @@ class _Content extends StatelessWidget {
                               height: 60,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: const Color(0xffd4f3d3),
+                                color: AppColors.light,
                               ),
                               child: const Icon(Icons.grass),
                             ),
@@ -234,6 +234,7 @@ class _Bar350g extends StatelessWidget {
             child: const Icon(
               Icons.check,
               size: 20,
+              color: AppColors.textMain,
             ),
           ),
         ),

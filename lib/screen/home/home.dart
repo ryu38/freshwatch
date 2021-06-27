@@ -105,22 +105,8 @@ class __ContentState extends State<_Content> {
           DashboardCard(
             content: DailyVeges(date.today),
           ),
-          DashboardCard(
+          const DashboardCard(
             content: BarChart(),
-          ),
-          DashboardCard(
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton(
-                  onPressed: () async {
-                    await Database.clearAll();
-                  }, 
-                  child: Text('clear database')
-                ),
-                Text(Provider.of<AllVegePosts>(context).posts.toString()),
-              ],
-            ),
           ),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -131,8 +117,25 @@ class __ContentState extends State<_Content> {
               content: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('History'),
-                  Icon(Icons.arrow_forward),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.history,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'History',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Icon(
+                    Icons.arrow_forward,
+                    color: AppColors.textMain,
+                  ),
                 ],
               ),
             ),

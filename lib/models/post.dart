@@ -92,6 +92,7 @@ class DailyVegePosts with ChangeNotifier {
     } else {
       _posts.removeLast();
     }
+    notifyListeners();
   }
 
   Future<void> addPost(VegePost newPost) async {
