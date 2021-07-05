@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:freshwatch/models/post.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Database {
 
@@ -57,4 +58,12 @@ class Database {
     return prefs.setString('posts', json.encode(database));
   }
 
+}
+
+class Storage {
+
+  static Future<String> get localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
+  }
 }

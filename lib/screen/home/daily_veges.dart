@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
@@ -46,12 +47,15 @@ class _Content extends StatelessWidget {
   final DateTime date;
   final String dateFmt;
 
+  final imgSize = 60.0;
+
   void _showModalBottomSheet({
     required BuildContext context, required Widget child }) {
     showModalBottomSheet<void>(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
+      backgroundColor: Colors.white,
       context: context, 
       builder: (_) {
         return MultiProvider(
@@ -127,15 +131,24 @@ class _Content extends StatelessWidget {
                       children: <Widget>[
                         Row(
                           children: [
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.light,
-                              ),
-                              child: const Icon(Icons.grass),
-                            ),
+                            post.imgUrl != ''
+                                ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(imgSize / 2),
+                                  child: Image.file(
+                                    File(post.imgUrl),
+                                    width: imgSize,
+                                    height: imgSize,
+                                  ),
+                                )
+                                : Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColors.light,
+                                  ),
+                                  child: const Icon(Icons.grass),
+                                ),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               child: Text(post.name),

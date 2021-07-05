@@ -17,6 +17,7 @@ class _HistoryState extends State<History> {
 
   late ScrollController _scrollController;
   int _loadCount = 1;
+  bool _isMax = false;
 
   final _loadDaysPerCount = 7;
 
@@ -28,17 +29,18 @@ class _HistoryState extends State<History> {
       final maxScrollExtent = _scrollController.position.maxScrollExtent;
       final currentPosition = _scrollController.position.pixels;
       if (maxScrollExtent > 0 &&
-          (maxScrollExtent - 10.0) <= currentPosition) {
+          (maxScrollExtent - 10.0) <= currentPosition &&
+          !_isMax) {
         _addContents();
       }
     });
   }
 
   void _addContents() {
+
     setState(() {
       _loadCount++;
     });
-    print(_loadCount);
   }
 
   int _loadDays(BuildContext context) {
@@ -47,7 +49,9 @@ class _HistoryState extends State<History> {
     final maxDays = today.difference(from).inDays + 1;
     final loadDays = _loadCount * _loadDaysPerCount;
     if (loadDays > maxDays) {
-      _scrollController.dispose();
+      setState(() {
+        _isMax = true;
+      });
       return maxDays;
     }
     return loadDays;

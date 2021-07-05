@@ -33,6 +33,7 @@ dependencies:
   cloud_firestore: ^2.2.2
   pedantic_mono: ^1.12.1
   path_provider: ^2.0.2
+  image_picker: ^0.8.1+1
   shared_preferences: ^2.0.6
   intl: ^0.17.0
 
