@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
+import 'package:freshwatch/models/user.dart';
 import 'package:freshwatch/theme/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -12,14 +13,16 @@ class BarChart extends StatelessWidget {
   Widget build(BuildContext context) {
 
     final allPosts = Provider.of<AllVegePosts>(context);
+    final userData = Provider.of<UserData?>(context) ?? UserData();
     final today = Provider.of<DateModel>(context).today;
     final from = today.add(const Duration(days: 6) * -1);
 
-    return ProxyProvider2<AllVegePosts, DateModel, DailyVegePostsInSpan>(
-      create: (_) => DailyVegePostsInSpan(allPosts, from, today),
-      update: (_, _allPosts, dateModel, dailyVegePostsInSpan) {
-        return dailyVegePostsInSpan!..init(from, dateModel.today);
+    return ProxyProvider<AllVegePosts, DailyVegePostsInSpan>(
+      create: (_) => DailyVegePostsInSpan(allPosts, userData, from, today),
+      update: (_, __, dailyVegePostsInSpan) {
+        return dailyVegePostsInSpan!..init(from, today);
       },
+      // If child is constant, Provider do not work.
       child: _Content()
     );
   }

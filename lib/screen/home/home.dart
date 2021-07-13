@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:freshwatch/features/data.dart';
 import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
+import 'package:freshwatch/models/user.dart';
 import 'package:freshwatch/screen/home/bar_chart.dart';
 import 'package:freshwatch/screen/home/daily_veges.dart';
 import 'package:freshwatch/screen/home/history.dart';
 import 'package:freshwatch/screen/home/home_scaffold.dart';
+import 'package:freshwatch/service/auth.dart';
+import 'package:freshwatch/service/firestore.dart';
 import 'package:freshwatch/theme/colors.dart';
 import 'package:freshwatch/widgets/card.dart';
+import 'package:freshwatch/widgets/loading.dart';
 import 'package:freshwatch/widgets/title.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
@@ -23,13 +25,14 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+
+    final userData = Provider.of<UserData?>(context) ?? UserData();
+
     return FutureBuilder(
-      future: AllVegePosts.init(),
+      future: AllVegePosts.init(userData),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Text('Loading'),
-          );
+          return Loading();
         } else {
           return MultiProvider(
             providers: [
@@ -48,14 +51,13 @@ class _HomeState extends State<Home> {
   }
 }
 
-class _Content extends StatefulWidget {
-  const _Content({ Key? key }) : super(key: key);
+class _Content extends StatelessWidget {
 
-  @override
-  __ContentState createState() => __ContentState();
-}
+  final _auth = AuthService();
 
-class __ContentState extends State<_Content> {
+  Future _navigateSignInPage(BuildContext context) async {
+    await Navigator.of(context).pushNamed('/signin');
+  }
 
   void _navigateHistoryPage(BuildContext context) {
     Navigator.of(context).push(
@@ -81,16 +83,131 @@ class __ContentState extends State<_Content> {
   Widget build(BuildContext context) {
 
     final date = Provider.of<DateModel>(context);
+    final userData = Provider.of<UserData?>(context) ?? UserData();
+
+    Widget userAction() {
+      final icon = Icon(
+        Icons.person,
+        color: userData.isLogin ? AppColors.textMain : const Color(0xFF666666),
+        size: 25,
+      );
+
+      const msgStyle = TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      );
+
+      const signIn = 'sign_in';
+      const signOut = 'sign_out';
+
+      final popupMenuList = userData.isLogin
+          ? <PopupMenuEntry<String>>[
+            PopupMenuItem(
+              enabled: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'uid',
+                    style: msgStyle
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    userData.uid!,
+                    style: msgStyle
+                  ),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem<String>(
+              value: signOut,
+              child: Center(
+                child: Text(
+                  'sign out',
+                  style: TextStyle(
+                    color: AppColors.textMain,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ]
+          : <PopupMenuEntry<String>>[
+            const PopupMenuItem(
+              enabled: false,
+              child: Text(
+                'You are currently not logged in',
+                style: msgStyle
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem<String>(
+              value: signIn,
+              child: Center(
+                child: Text(
+                  'sign in',
+                  style: TextStyle(
+                    color: AppColors.textMain,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ];
+
+      return PopupMenuButton<String>(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        onSelected: (String commandVal) async {
+          switch (commandVal) {
+            case signIn:
+              await _navigateSignInPage(context);
+              break;
+            case signOut:
+              var errMsg = await _auth.signOut();
+              errMsg ??= 'signout success';
+              print(errMsg);
+              break;
+            default:
+              break;
+          }
+        },
+        itemBuilder: (BuildContext context) => popupMenuList,
+        child: icon,
+      );
+    } 
 
     return HomeScaff(
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: 25, horizontal: 15
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 25),
+                  child: AppTitle(),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xff000000).withOpacity(.05),
+                        blurRadius: 30,
+                      )
+                    ]
+                  ),
+                  child: userAction(),
+                )
+              ],
             ),
-            child: AppTitle(),
           ),
           const DashboardCard(
             backgroundColor: AppColors.main,
@@ -103,7 +220,10 @@ class __ContentState extends State<_Content> {
             ),
           ),
           DashboardCard(
-            content: DailyVeges(date.today),
+            content: DailyVeges(
+              date: date.today,
+              useProxyProv: true,
+            ),
           ),
           const DashboardCard(
             content: BarChart(),

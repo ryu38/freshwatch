@@ -1,37 +1,46 @@
 import 'dart:io';
+import 'package:async/async.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
+import 'package:freshwatch/models/user.dart';
 import 'package:freshwatch/screen/home/form/edit_form.dart';
 import 'package:freshwatch/screen/home/form/post_form.dart';
+import 'package:freshwatch/service/storage.dart';
 import 'package:freshwatch/theme/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class DailyVeges extends StatelessWidget {
-  DailyVeges(
-    this.date, 
-    { Key? key }
-  ) :
-    dateFmt = DateFormat('yyyy/MM/dd').format(date),
-    super(key: key);
+
+  DailyVeges({
+    required this.date,
+    this.useProxyProv = false,
+  });
 
   final DateTime date;
-  final String dateFmt;
+  final bool useProxyProv;
 
   @override
   Widget build(BuildContext context) {
 
-    final allPosts = Provider.of<AllVegePosts>(context, listen: false);
+    final userData = Provider.of<UserData?>(context) ?? UserData();
 
-    return ChangeNotifierProxyProvider2<AllVegePosts, DateModel, DailyVegePosts>(
-      create: (_) => DailyVegePosts(allPosts, date),
-      update: (_, allVegePosts, dateModel, dailyVegePosts) {
-        dailyVegePosts!.init(date);
-        return dailyVegePosts;
-      },
+    if (useProxyProv) {
+      final allPosts = Provider.of<AllVegePosts>(context);
+      return ChangeNotifierProxyProvider<AllVegePosts, DailyVegePosts>(
+      create: (_) => DailyVegePosts(allPosts, date, userData),
+      update: (context, allPosts, dailyPosts) => dailyPosts!..init(allPosts),
       child: _Content(date),
     );
+    } else {
+      final allPosts = Provider.of<AllVegePosts>(context, listen: false);
+      return ChangeNotifierProvider(
+        create: (_) => DailyVegePosts(allPosts, date, userData),
+        child: _Content(date),
+      );
+    }
   }
 }
 
@@ -46,11 +55,12 @@ class _Content extends StatelessWidget {
 
   final DateTime date;
   final String dateFmt;
+  final memoizer = AsyncMemoizer<Image Function(double)?>();
 
   final imgSize = 60.0;
 
   void _showModalBottomSheet({
-    required BuildContext context, required Widget child }) {
+      required BuildContext context, required Widget child }) {
     showModalBottomSheet<void>(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
@@ -81,6 +91,67 @@ class _Content extends StatelessWidget {
     
     final dailyPosts = Provider.of<DailyVegePosts>(context);
 
+    Future<Image Function(double)?> setImgWidget(String imgName) async {
+      if (imgName == '') {
+        return null;
+      }
+      final userData = Provider.of<UserData?>(context) ?? UserData();
+      if (userData.isLogin) {
+        final url = await StorageService(userData.uid!).getFileUrl(imgName);
+        return (double size) => Image(
+            image: CachedNetworkImageProvider(url),
+            height: size,
+            width: size
+          );
+      } else {
+        return (double size) => Image.file(
+            File(imgName), height: size, width: size);
+      }
+    }
+
+    Widget imgSnapshotHandler(AsyncSnapshot<Image Function(double)?> snapshot) {
+      if (snapshot.hasError) {
+        return Container(
+          width: imgSize,
+          height: imgSize,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey,
+          ),
+          child: const Icon(Icons.no_accounts),
+        );
+      }
+
+      if (snapshot.connectionState == ConnectionState.done) {
+        if (snapshot.data == null) {
+          return Container(
+            width: imgSize,
+            height: imgSize,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.light,
+            ),
+            child: const Icon(Icons.grass),
+          );
+        } else {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(imgSize / 2),
+            child: snapshot.data!(imgSize)
+          );
+        }
+      }
+
+      return Container(
+        width: imgSize,
+        height: imgSize,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.grey,
+        ),
+        child: const Icon(Icons.circle)
+      );
+    }
+
     return Column(
       children: <Widget>[
         Row(
@@ -102,69 +173,60 @@ class _Content extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 15),
-        MediaQuery.removePadding(
-          context: context,
-          removeTop: true,
-          child: ListView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: dailyPosts.posts.length,
-            itemBuilder: (BuildContext context, int index) {
-              final post = dailyPosts.posts[index];
-              return Dismissible(
-                key: ObjectKey(post),
-                onDismissed: (direction) async {
-                  await dailyPosts.deletePost(index);
-                },
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    _showModalBottomSheet(
-                      context: context,
-                      child: EditForm(index: index),
-                    );
+        ListView.builder(
+          padding: EdgeInsets.zero,
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: dailyPosts.posts.length,
+          itemBuilder: (BuildContext context, int index) {
+            final post = dailyPosts.posts[index];
+            print('${dailyPosts.date}: $index');
+            return FutureBuilder<Image Function(double)?>(
+              future: setImgWidget(post.imgUrl),
+              builder: (context, snapshot) {
+                return Dismissible(
+                  key: ObjectKey(post),
+                  onDismissed: (direction) async {
+                    await dailyPosts.deletePost(index);
                   },
-                  child: Container(
-                    padding: const EdgeInsets.only(bottom: 15),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Row(
-                          children: [
-                            post.imgUrl != ''
-                                ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(imgSize / 2),
-                                  child: Image.file(
-                                    File(post.imgUrl),
-                                    width: imgSize,
-                                    height: imgSize,
-                                  ),
-                                )
-                                : Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColors.light,
-                                  ),
-                                  child: const Icon(Icons.grass),
-                                ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              child: Text(post.name),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          child: Text('${post.gram}g'),
-                        )
-                      ],
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        _showModalBottomSheet(
+                          context: context,
+                          child: EditForm(
+                            index: index,
+                            currentImgWidget: snapshot.data
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.only(bottom: 15),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Row(
+                            children: [
+                              imgSnapshotHandler(snapshot),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Text(post.name),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            child: Text('${post.gram}g'),
+                          )
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+              }
+            );
+          },
         ),
         Container(
           child: GestureDetector(

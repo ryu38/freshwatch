@@ -1,8 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:freshwatch/features/data.dart';
-import 'package:freshwatch/screen/home/daily_veges.dart';
+import 'package:freshwatch/features/local.dart';
+import 'package:freshwatch/models/user.dart';
+import 'package:freshwatch/service/firestore.dart';
 import 'package:intl/intl.dart';
 
 class VegePost {
@@ -33,24 +34,36 @@ class AllVegePosts with ChangeNotifier {
 
   AllVegePosts(
     this._posts,
-    this._startDate
+    this._startDate,
+    this._userData,
   );
 
   Map<String, dynamic> _posts;
+  final UserData _userData;
   final DateTime _startDate;
 
   Map<String, dynamic> get posts => _posts;
   int get dayLength => _posts.length;
   DateTime get startDate => _startDate;
 
-  static Future<AllVegePosts> init() async {
-    final posts = await Database.loadAllPostLocal();
-    final startDate = await Database.loadStartDate();
-    return AllVegePosts(posts, startDate);
+  static Future<AllVegePosts> init(UserData userData) async {
+    final Map<String, dynamic> posts;
+    final DateTime startDate;
+    if (userData.isLogin) {
+      final fsInstance = FirestoreService(userData.uid!);
+      posts = await fsInstance.getAllPosts;
+      startDate = await fsInstance.getStartDate;
+    } else {
+      posts = await LocalData.loadAllPostLocal();
+      startDate = await LocalData.loadStartDate();
+    }
+    return AllVegePosts(posts, startDate, userData);
   }
 
   Future<void> update() async {
-    _posts = await Database.loadAllPostLocal();
+    _posts = _userData.isLogin 
+        ? await FirestoreService(_userData.uid!).getAllPosts
+        : await LocalData.loadAllPostLocal();
     notifyListeners();
   }
 }
@@ -60,22 +73,35 @@ class DailyVegePosts with ChangeNotifier {
   DailyVegePosts(
     this._allPosts,
     this._date,
+    this._userData,
   ) {
-    init(_date);
+    init(_allPosts);
   }
   
   final AllVegePosts _allPosts;
-  late DateTime _date;
+  final DateTime _date;
+  final UserData _userData;
+
   late List<VegePost> _posts;
 
   DateTime get date => _date;
   List<VegePost> get posts => _posts;
 
-  void init(DateTime date) {
-    final dateFmt = DateFormat('yyyy/MM/dd').format(date);
-    final dailyPostsJson = _allPosts.posts[dateFmt] as String?;
-    if (dailyPostsJson != null) {
-      final targetPosts = jsonDecode(dailyPostsJson) as List<dynamic>;
+  void init(AllVegePosts allPosts) {
+    
+    final String dateFmt;
+    final List<dynamic>? targetPosts;
+    if (_userData.isLogin) {
+      dateFmt = DateFormat('yyyy-MM-dd').format(_date);
+      targetPosts = allPosts.posts[dateFmt] as List<dynamic>?;
+    } else {
+      dateFmt = DateFormat('yyyy/MM/dd').format(_date);
+      final dailyPostsJson = allPosts.posts[dateFmt] as String?;
+      targetPosts = dailyPostsJson != null 
+          ? jsonDecode(dailyPostsJson) as List<dynamic> : null;
+    }
+
+    if (targetPosts != null) {
       _posts = targetPosts.map<VegePost>((dynamic val) {
         final postJson = json.decode(val as String) as Map<String, dynamic>;
         return VegePost.fromJson(postJson);
@@ -86,12 +112,20 @@ class DailyVegePosts with ChangeNotifier {
   }
 
   Future<void> _reflect() async {
-    final result = await Database.addPostLocal(this);
+    final bool result;
+    if (_userData.isLogin) {
+      await FirestoreService(_userData.uid!).updateDailyData(this);
+      result = true;
+    } else {
+      result = await LocalData.addPostLocal(this);
+    }
+
     if (result) {
       await _allPosts.update();
     } else {
       _posts.removeLast();
     }
+
     notifyListeners();
   }
 
@@ -117,23 +151,21 @@ class DailyVegePosts with ChangeNotifier {
     }
     return totalGram;
   }
-
-  void printTest() {
-    print(_allPosts._posts);
-  }
 }
 
 class DailyVegePostsInSpan {
 
   DailyVegePostsInSpan(
     this._allPosts,
+    this._userData,
     DateTime from,
-    DateTime to
+    DateTime to,
   ) {
     init(from, to);
   }
 
   final AllVegePosts _allPosts;
+  final UserData _userData;
   late List<DailyVegePosts> _posts;
 
   List<DailyVegePosts> get posts => _posts;
@@ -143,7 +175,7 @@ class DailyVegePostsInSpan {
     final dateSpan = to.difference(from).inDays;
     for (var d = 0; d <= dateSpan; d++) {
       posts.add(
-        DailyVegePosts(_allPosts, from.add(Duration(days: d)))
+        DailyVegePosts(_allPosts, from.add(Duration(days: d)), _userData)
       );
     }
     _posts = posts;

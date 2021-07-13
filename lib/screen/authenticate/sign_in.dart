@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:freshwatch/features/auth.dart';
+import 'package:freshwatch/features/local.dart';
+import 'package:freshwatch/service/auth.dart';
 import 'package:freshwatch/widgets/title.dart';
 
 class SignIn extends StatefulWidget {
@@ -30,6 +31,7 @@ class _SignInState extends State<SignIn> {
                 } else {
                   print('signed in');
                   print(result);
+                  await LocalData.setNotInitFlag();
                 }
               },
               child: const Text('Sign in anon'),

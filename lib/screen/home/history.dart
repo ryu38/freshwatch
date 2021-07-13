@@ -45,7 +45,7 @@ class _HistoryState extends State<History> {
 
   int _loadDays(BuildContext context) {
     final today = Provider.of<DateModel>(context).today;
-    final from = Provider.of<AllVegePosts>(context).startDate;
+    final from = Provider.of<AllVegePosts>(context, listen: false).startDate;
     final maxDays = today.difference(from).inDays + 1;
     final loadDays = _loadCount * _loadDaysPerCount;
     if (loadDays > maxDays) {
@@ -80,20 +80,17 @@ class _HistoryState extends State<History> {
               ),
             ),
           ),
-          MediaQuery.removePadding(
-            context: context,
-            removeTop: true,
-            child: ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _loadDays(context),
-              itemBuilder: (BuildContext context, int index) {
-                final date = _calcDateDiff(context, index);
-                return DashboardCard(
-                  content: DailyVeges(date),
-                );
-              },
-            ),
+          ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _loadDays(context),
+            itemBuilder: (BuildContext context, int index) {
+              final date = _calcDateDiff(context, index);
+              return DashboardCard(
+                content: DailyVeges(date: date),
+              );
+            },
           ),
         ],
       ),

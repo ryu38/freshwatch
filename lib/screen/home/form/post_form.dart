@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:freshwatch/features/image.dart';
 import 'package:freshwatch/models/post.dart';
+import 'package:freshwatch/models/user.dart';
+import 'package:freshwatch/service/storage.dart';
 import 'package:freshwatch/theme/colors.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +23,13 @@ class _PostFormState extends State<PostForm> {
   int _gram = 0;
   String? _imagePath;
 
+  Future<String> _imgSaver(BuildContext context, String imgPath) async {
+    final userData = Provider.of<UserData?>(context, listen: false) ?? UserData();
+    return userData.isLogin
+        ? StorageService(userData.uid!).uploadFile(imgPath)
+        : ImageController.saveLocalImage(imgPath);
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -29,13 +38,74 @@ class _PostFormState extends State<PostForm> {
     Widget imageDisplay() {
       const size = 70.0;
 
-      return GestureDetector(
-        onTap: () async {
-          final imagePath = await ImageController.getFromGallery();
-          setState(() {
-            _imagePath = imagePath;
-          });
+      const gallary = 'gallary';
+      const camera = 'camera';
+      const delete = 'delete';
+
+      return PopupMenuButton<String>(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        onSelected: (String commandVal) async {
+          String? imagePath;
+          switch (commandVal) {
+            case gallary:
+              imagePath = await ImageController.getFromGallery();
+              break;
+            case camera:
+              imagePath = await ImageController.getFromCamera();
+              break;
+            case delete:
+              setState(() {
+                _imagePath = null;
+              });
+              return;
+            default:
+              return;
+          }
+
+          if (imagePath != null) {
+            setState(() {
+              _imagePath = imagePath;
+            });
+          }
         },
+        itemBuilder: (context) => <PopupMenuEntry<String>>[
+          PopupMenuItem(
+            value: camera,
+            child: Center(
+              child: Text(
+                'take photo',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          PopupMenuItem(
+            value: gallary,
+            child: Center(
+              child: Text(
+                'choose existing photo',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          PopupMenuItem(
+            value: delete,
+            child: Center(
+              child: Text(
+                'delete set photo',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
         child: _imagePath == null
             ? Container(
                 width: size,
@@ -146,8 +216,7 @@ class _PostFormState extends State<PostForm> {
                 onPressed: () async {
                   if (_formKey.currentState?.validate() == true) {
                     final imgSavedPath = _imagePath != null
-                        ? await ImageController.saveLocalImage(_imagePath!)
-                        : '';
+                        ? await _imgSaver(context, _imagePath!) : '';
                     final newPost = VegePost(
                       name: _name, gram: _gram, imgUrl: imgSavedPath,
                     );

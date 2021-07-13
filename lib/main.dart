@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:freshwatch/models/user.dart';
+import 'package:freshwatch/screen/authenticate/sign_in.dart';
 import 'package:freshwatch/screen/wrapper.dart';
+import 'package:freshwatch/service/auth.dart';
+import 'package:freshwatch/widgets/loading.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -23,23 +28,26 @@ class MyApp extends StatelessWidget {
         }
 
         if (snapshot.connectionState == ConnectionState.done) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData.light().copyWith(
-              scaffoldBackgroundColor: const Color(0xfffafafa)
+          return StreamProvider<UserData?>.value(
+            value: AuthService().user,
+            initialData: null,
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: ThemeData.light().copyWith(
+                scaffoldBackgroundColor: const Color(0xfffafafa)
+              ),
+              darkTheme: ThemeData.dark(),
+              initialRoute: '/',
+              routes: <String, WidgetBuilder>{
+                '/': (BuildContext context) => Wrapper(),
+                '/signin': (BuildContext context) => SignIn(),
+              }
             ),
-            darkTheme: ThemeData.dark(),
-            home: Wrapper(),
           );
         }
 
         return MaterialApp(
-          home: Scaffold(
-            body: Container(
-              color: Colors.white,
-              child: const Text('Loading ...'),
-            ),
-          ),
+          home: Loading()
         );
       },
     );

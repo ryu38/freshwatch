@@ -31,11 +31,14 @@ dependencies:
   provider: ^5.0.0
   firebase_auth: ^1.4.1
   cloud_firestore: ^2.2.2
+  firebase_storage: ^9.0.0
   pedantic_mono: ^1.12.1
   path_provider: ^2.0.2
   image_picker: ^0.8.1+1
   shared_preferences: ^2.0.6
   intl: ^0.17.0
+  cached_network_image: ^3.0.0
+  async: ^2.6.1
 
 dev_dependencies:
   flutter_test:

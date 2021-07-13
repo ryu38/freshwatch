@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:freshwatch/features/image.dart';
 import 'package:freshwatch/models/post.dart';
+import 'package:freshwatch/models/user.dart';
+import 'package:freshwatch/service/storage.dart';
 import 'package:freshwatch/theme/colors.dart';
 import 'package:provider/provider.dart';
 
@@ -10,10 +12,12 @@ class EditForm extends StatefulWidget {
   const EditForm({
     Key? key,
     required this.index,
+    required this.currentImgWidget,
   }) : 
     super(key: key);
 
   final int index;
+  final Image Function(double)? currentImgWidget;
 
   @override
   _EditFormState createState() => _EditFormState();
@@ -26,6 +30,14 @@ class _EditFormState extends State<EditForm> {
   String _name = '';
   int _gram = 0;
   String? _imagePath;
+  bool _isImgChanged = false;
+
+  Future<String> _imgSaver(BuildContext context, String imgPath) async {
+    final userData = Provider.of<UserData?>(context, listen: false) ?? UserData();
+    return userData.isLogin
+        ? StorageService(userData.uid!).uploadFile(imgPath)
+        : ImageController.saveLocalImage(imgPath);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,23 +47,104 @@ class _EditFormState extends State<EditForm> {
 
     Widget imageDisplay() {
       const size = 70.0;
-      final imagePath = _imagePath ?? targetPost.imgUrl;
 
-      return GestureDetector(
-        onTap: () async {
-          final imagePath = await ImageController.getFromGallery();
-          setState(() {
-            _imagePath = imagePath;
-          });
+      const gallary = 'gallary';
+      const camera = 'camera';
+      const delete = 'delete';
+
+      return PopupMenuButton<String>(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        onSelected: (String commandVal) async {
+          String? imagePath;
+          switch (commandVal) {
+            case gallary:
+              imagePath = await ImageController.getFromGallery();
+              break;
+            case camera:
+              imagePath = await ImageController.getFromCamera();
+              break;
+            case delete:
+              setState(() {
+                _imagePath = null;
+                _isImgChanged = true;
+              });
+              return;
+            default:
+              return;
+          }
+
+          if (imagePath != null) {
+            setState(() {
+              _imagePath = imagePath;
+              _isImgChanged = true;
+            });
+          }
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(size / 2),
-          child: Image.file(
-            File(imagePath),
-            width: size,
-            height: size,
+        itemBuilder: (context) => <PopupMenuEntry<String>>[
+          PopupMenuItem(
+            value: camera,
+            child: Center(
+              child: Text(
+                'take photo',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
-        )
+          PopupMenuItem(
+            value: gallary,
+            child: Center(
+              child: Text(
+                'choose existing photo',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          PopupMenuItem(
+            value: delete,
+            child: Center(
+              child: Text(
+                'delete set photo',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+        child: (_imagePath == null && _isImgChanged) 
+            || (!_isImgChanged && widget.currentImgWidget == null)
+            ? Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.grey,
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.photo_camera,
+                  color: Colors.grey,
+                ),
+              )
+            : ClipRRect(
+              borderRadius: BorderRadius.circular(size / 2),
+              child: _imagePath != null
+                  ? Image.file(
+                    File(_imagePath!),
+                    width: size,
+                    height: size,
+                  )
+                  : widget.currentImgWidget!(size)
+            ),
       );
     }
 
@@ -147,8 +240,9 @@ class _EditFormState extends State<EditForm> {
                 onPressed: () async {
                   if (_formKey.currentState?.validate() == true) {
                     _formKey.currentState?.save();
-                    final imgSavedPath = _imagePath != null
-                        ? await ImageController.saveLocalImage(_imagePath!)
+                    final imgSavedPath = _isImgChanged
+                        ? _imagePath != null
+                            ? await _imgSaver(context, _imagePath!) : ''
                         : targetPost.imgUrl;
                     final newPost = VegePost(
                       name: _name, gram: _gram, imgUrl: imgSavedPath,

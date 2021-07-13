@@ -5,16 +5,21 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 
-class Database {
+class LocalData {
 
-  static Future<String?> get printSP async {
+  static Future<bool?> get getNotInitFlag async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('posts');
+    return prefs.getBool('not_init');
+  }
+
+  static Future<bool> setNotInitFlag() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.setBool('not_init', true);
   }
 
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.clear();
+    await prefs.clear();
   }
 
   static Future<Map<String, dynamic>> loadAllPostLocal() async {
@@ -32,7 +37,7 @@ class Database {
       final now = DateTime.now();
       startDate = DateTime(now.year, now.month, now.day);
       startDateStr = DateFormat('yyyy/MM/dd').format(startDate);
-      prefs.setString(key, startDateStr);
+      await prefs.setString(key, startDateStr);
     } else {
       startDate = DateFormat('yyyy/MM/dd').parse(startDateStr);
     }
@@ -45,7 +50,7 @@ class Database {
     final date = DateFormat('yyyy/MM/dd').format(dailyPosts.date);
 
     final database = await loadAllPostLocal();
-    if (!posts.isEmpty) {
+    if (posts.isNotEmpty) {
       final jsonList = posts.map((val) {
         return json.encode(val);
       }).toList();
@@ -60,7 +65,7 @@ class Database {
 
 }
 
-class Storage {
+class LocalStorage {
 
   static Future<String> get localPath async {
     final directory = await getApplicationDocumentsDirectory();
