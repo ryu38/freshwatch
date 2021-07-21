@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:freshwatch/features/local.dart';
 import 'package:freshwatch/models/post.dart';
 import 'package:intl/intl.dart';
@@ -19,9 +20,17 @@ class FirestoreService {
   }
 
   Future<Map<String, dynamic>> get getAllPosts async {
-    final allData = await getAllData;
-    return allData?['vege_data'] as Map<String, dynamic>? 
-        ?? <String, dynamic>{};
+    final ref = collection.doc(uid).collection('vege_data');
+    final allData = await ref.get();
+    final allPostsMap = <String, List<dynamic>>{};
+    for (final docDaily in allData.docs) {
+      final dailyData = await ref.doc(docDaily.id).get();
+      final dailyPosts = dailyData.data()?['posts'] as List<dynamic>?;
+      if (dailyPosts != null) {
+        allPostsMap[docDaily.id] = dailyPosts;
+      }
+    }
+    return allPostsMap;
   }
 
   Future<DateTime> get getStartDate async {
@@ -33,26 +42,20 @@ class FirestoreService {
     return DateFormat('yyyy-MM-dd').parse(startDateFmt);
   }
 
-  Future<List<dynamic>?> getDailyData(DateTime date) async {
-    final dateFmt = DateFormat('yyyy-MM-dd').format(date);
-    final allData = await getAllData;
-    return allData?['vege_data'][dateFmt] as List<dynamic>?;
-  }
-
-  Future updateDailyData(DailyVegePosts dailyVegePosts) async {
+  Future<void> updateDailyData(DailyVegePosts dailyVegePosts) async {
     if (await getAllData == null) {
       final startDate = await LocalData.loadStartDate();
       final startDateFmt = DateFormat('yyyy-MM-dd').format(startDate);
       await collection.doc(uid).set(<String, dynamic>{
         'start_date': startDateFmt,
-        'vege_data': <String, List<String>>{}
       });
     }
     final jsonPosts = dailyVegePosts.posts
         .map((post) => json.encode(post)).toList();
     final dateFmt = DateFormat('yyyy-MM-dd').format(dailyVegePosts.date);
-    await collection.doc(uid).update({
-      'vege_data.$dateFmt': jsonPosts
-    });
+    await collection.doc(uid)
+        .collection('vege_data').doc(dateFmt).set(<String, List<String>>{
+          'posts': jsonPosts
+        });
   }
 }

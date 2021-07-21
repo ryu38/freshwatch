@@ -122,13 +122,12 @@ class _PostFormState extends State<PostForm> {
                   color: Colors.grey,
                 ),
               )
-            : ClipRRect(
-              borderRadius: BorderRadius.circular(size / 2),
-              child: Image.file(
-                  File(_imagePath!),
-                  width: size,
-                  height: size,
-                ),
+            : CircleAvatar(
+              radius: size / 2,
+              backgroundColor: Colors.transparent,
+              backgroundImage: Image.file(
+                  File(_imagePath!)
+                ).image
             ),
       );
     }
@@ -170,6 +169,9 @@ class _PostFormState extends State<PostForm> {
             decoration: inputDecoration(
               hintText: 'name',
             ),
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(30),
+            ],
             validator: (val) => val?.isEmpty == true ? 'Enter a name' : null,
             onChanged: (val) {
               setState(() => _name = val);
@@ -189,6 +191,7 @@ class _PostFormState extends State<PostForm> {
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(3),
                   ],
                   validator: (val) => val == '' ? 'Enter an amount' : null,
                   onChanged: (val) {
@@ -215,13 +218,13 @@ class _PostFormState extends State<PostForm> {
                 child: const Text('add'),
                 onPressed: () async {
                   if (_formKey.currentState?.validate() == true) {
+                    Navigator.pop(context);
                     final imgSavedPath = _imagePath != null
                         ? await _imgSaver(context, _imagePath!) : '';
                     final newPost = VegePost(
                       name: _name, gram: _gram, imgUrl: imgSavedPath,
                     );
                     await dailyPosts.addPost(newPost);
-                    Navigator.pop(context);
                   }
                 },
               ),

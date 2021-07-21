@@ -17,6 +17,11 @@ class LocalData {
     return prefs.setBool('not_init', true);
   }
 
+  static Future<bool> resetInitFlag() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.remove('not_init');
+  }
+
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

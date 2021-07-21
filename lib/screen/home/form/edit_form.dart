@@ -17,7 +17,7 @@ class EditForm extends StatefulWidget {
     super(key: key);
 
   final int index;
-  final Image Function(double)? currentImgWidget;
+  final Image Function()? currentImgWidget;
 
   @override
   _EditFormState createState() => _EditFormState();
@@ -135,15 +135,14 @@ class _EditFormState extends State<EditForm> {
                   color: Colors.grey,
                 ),
               )
-            : ClipRRect(
-              borderRadius: BorderRadius.circular(size / 2),
-              child: _imagePath != null
+            : CircleAvatar(
+              radius: size / 2,
+              backgroundColor: Colors.transparent,
+              backgroundImage: _imagePath != null
                   ? Image.file(
                     File(_imagePath!),
-                    width: size,
-                    height: size,
-                  )
-                  : widget.currentImgWidget!(size)
+                  ).image
+                  : widget.currentImgWidget!().image
             ),
       );
     }
@@ -186,6 +185,9 @@ class _EditFormState extends State<EditForm> {
               hintText: 'name',
             ),
             initialValue: targetPost.name,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(30),
+            ],
             validator: (val) => val?.isEmpty == true ? 'Enter a name' : null,
             onChanged: (val) {
               setState(() => _name = val);
@@ -209,6 +211,7 @@ class _EditFormState extends State<EditForm> {
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(3),
                   ],
                   validator: (val) => val == '' ? 'Enter an amount' : null,
                   onChanged: (val) {
@@ -236,9 +239,10 @@ class _EditFormState extends State<EditForm> {
                   ),
                   primary: AppColors.main,
                 ),
-                child: const Text('add'),
+                child: const Text('save'),
                 onPressed: () async {
                   if (_formKey.currentState?.validate() == true) {
+                    Navigator.pop(context);
                     _formKey.currentState?.save();
                     final imgSavedPath = _isImgChanged
                         ? _imagePath != null
@@ -248,7 +252,6 @@ class _EditFormState extends State<EditForm> {
                       name: _name, gram: _gram, imgUrl: imgSavedPath,
                     );
                     await dailyPosts.updatePost(widget.index, newPost);
-                    Navigator.pop(context);
                   }
                 },
               ),

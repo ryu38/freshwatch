@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 
 class AppTitle extends StatelessWidget {
+
+  AppTitle({
+    this.fontSize = 24.0
+  });
+
+  final double fontSize;
+
   @override
   Widget build(BuildContext context) {
     return RichText(
-      text: const TextSpan(
+      text: TextSpan(
         style: TextStyle(
-          fontSize: 24,
+          fontSize: fontSize,
           fontWeight: FontWeight.bold,
         ),
         children: [
-          TextSpan(
+          const TextSpan(
             text: 'Yasai',
             style: TextStyle(
               color: Color(0xff56ad54)
             ),
           ),
-          TextSpan(
+          const TextSpan(
             text: 'Query',
             style: TextStyle(
               color: Color(0xff026500)

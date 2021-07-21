@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:freshwatch/features/local.dart';
+import 'package:freshwatch/models/cache.dart';
 import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
 import 'package:freshwatch/models/user.dart';
@@ -6,9 +9,11 @@ import 'package:freshwatch/screen/home/bar_chart.dart';
 import 'package:freshwatch/screen/home/daily_veges.dart';
 import 'package:freshwatch/screen/home/history.dart';
 import 'package:freshwatch/screen/home/home_scaffold.dart';
+import 'package:freshwatch/screen/home/retry.dart';
 import 'package:freshwatch/service/auth.dart';
 import 'package:freshwatch/service/firestore.dart';
 import 'package:freshwatch/theme/colors.dart';
+import 'package:freshwatch/utils/error_toast.dart';
 import 'package:freshwatch/widgets/card.dart';
 import 'package:freshwatch/widgets/loading.dart';
 import 'package:freshwatch/widgets/title.dart';
@@ -23,29 +28,38 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
+  void _refresh() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
 
     final userData = Provider.of<UserData?>(context) ?? UserData();
 
-    return FutureBuilder(
+    return FutureBuilder<AllVegePosts>(
       future: AllVegePosts.init(userData),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return Loading();
-        } else {
-          return MultiProvider(
-            providers: [
-              ChangeNotifierProvider<AllVegePosts>.value(
-                value: snapshot.data! as AllVegePosts,
-              ),
-              ChangeNotifierProvider<DateModel>(
-                create: (_) => DateModel(),
-              ),
-            ],
-            child: _Content(),
-          );
+        if (snapshot.hasError) {
+          return Retry(refresh: _refresh);
         }
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.data != null) {
+            return MultiProvider(
+              providers: [
+                ChangeNotifierProvider<AllVegePosts>.value(
+                  value: snapshot.data!,
+                ),
+                ChangeNotifierProvider<DateModel>(
+                  create: (_) => DateModel(),
+                ),
+                Provider(create: (_) => Cache()),
+              ],
+              child: _Content(),
+            );
+          }
+        }
+        return Loading();
       }
     );
   }
@@ -70,6 +84,9 @@ class _Content extends StatelessWidget {
               ),
               ChangeNotifierProvider.value(
                 value: Provider.of<DateModel>(context, listen: false),
+              ),
+              Provider.value(
+                value: Provider.of<Cache>(context, listen: false),
               ),
             ],
             child: History(),
@@ -108,12 +125,12 @@ class _Content extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   const Text(
-                    'uid',
+                    'email',
                     style: msgStyle
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    userData.uid!,
+                    userData.email!,
                     style: msgStyle
                   ),
                 ],
@@ -166,9 +183,12 @@ class _Content extends StatelessWidget {
               await _navigateSignInPage(context);
               break;
             case signOut:
-              var errMsg = await _auth.signOut();
-              errMsg ??= 'signout success';
-              print(errMsg);
+              final result = await _auth.signOut();
+              if (!result) {
+                await ErrorToast.show(
+                  'An Internet Error has Occurred. Could not sign out'
+                );
+              }
               break;
             default:
               break;
@@ -259,6 +279,14 @@ class _Content extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+          DashboardCard(
+            content: ElevatedButton(
+              onPressed: () async {
+                await LocalData.resetInitFlag();
+              }, 
+              child: const Text('set init')
+            )
           ),
         ],
       ),

@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:async/async.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:freshwatch/models/cache.dart';
 import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
 import 'package:freshwatch/models/user.dart';
@@ -55,7 +57,8 @@ class _Content extends StatelessWidget {
 
   final DateTime date;
   final String dateFmt;
-  final memoizer = AsyncMemoizer<Image Function(double)?>();
+
+  final sampleList = <int>[];
 
   final imgSize = 60.0;
 
@@ -91,32 +94,36 @@ class _Content extends StatelessWidget {
     
     final dailyPosts = Provider.of<DailyVegePosts>(context);
 
-    Future<Image Function(double)?> setImgWidget(String imgName) async {
+    Future<Image Function()?> setImgWidget(String imgName) async {
       if (imgName == '') {
         return null;
       }
-      final userData = Provider.of<UserData?>(context) ?? UserData();
+      final userData = Provider.of<UserData?>(context, listen: false) ?? UserData();
       if (userData.isLogin) {
-        final url = await StorageService(userData.uid!).getFileUrl(imgName);
-        return (double size) => Image(
-            image: CachedNetworkImageProvider(url),
-            height: size,
-            width: size
-          );
+        try {
+          final cacheUrls = Provider.of<Cache>(context, listen: false).imgUrls;
+          cacheUrls[imgName] ??= AsyncMemoizer<String>();
+          final url = await cacheUrls[imgName]!.runOnce(() => 
+              StorageService(userData.uid!).getFileUrl(imgName));
+          return () => Image(
+              image: CachedNetworkImageProvider(url)
+            );
+        } catch (e) {
+          return Future.error(e);
+        }
       } else {
-        return (double size) => Image.file(
-            File(imgName), height: size, width: size);
+        return () => Image.file(File(imgName));
       }
     }
 
-    Widget imgSnapshotHandler(AsyncSnapshot<Image Function(double)?> snapshot) {
+    Widget imgSnapshotHandler(AsyncSnapshot<Image Function()?> snapshot) {
       if (snapshot.hasError) {
         return Container(
           width: imgSize,
           height: imgSize,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.grey,
+            color: Color(0xFFDDDDDD),
           ),
           child: const Icon(Icons.no_accounts),
         );
@@ -134,9 +141,10 @@ class _Content extends StatelessWidget {
             child: const Icon(Icons.grass),
           );
         } else {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(imgSize / 2),
-            child: snapshot.data!(imgSize)
+          return CircleAvatar(
+            radius: imgSize / 2,
+            backgroundImage: snapshot.data!().image,
+            backgroundColor: Colors.transparent,
           );
         }
       }
@@ -146,9 +154,12 @@ class _Content extends StatelessWidget {
         height: imgSize,
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.grey,
+          color: Color(0xFFDDDDDD),
         ),
-        child: const Icon(Icons.circle)
+        child: SpinKitThreeBounce(
+          color: Colors.grey,
+          size: imgSize / 3
+        )
       );
     }
 
@@ -180,8 +191,7 @@ class _Content extends StatelessWidget {
           itemCount: dailyPosts.posts.length,
           itemBuilder: (BuildContext context, int index) {
             final post = dailyPosts.posts[index];
-            print('${dailyPosts.date}: $index');
-            return FutureBuilder<Image Function(double)?>(
+            return FutureBuilder<Image Function()?>(
               future: setImgWidget(post.imgUrl),
               builder: (context, snapshot) {
                 return Dismissible(
@@ -202,19 +212,28 @@ class _Content extends StatelessWidget {
                         );
                       }
                     },
-                    child: Container(
+                    child: Padding(
                       padding: const EdgeInsets.only(bottom: 15),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Row(
-                            children: [
-                              imgSnapshotHandler(snapshot),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                child: Text(post.name),
-                              ),
-                            ],
+                          Flexible(
+                            child: Row(
+                              children: [
+                                imgSnapshotHandler(snapshot),
+                                Flexible(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    child: Text(
+                                      post.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           Container(
                             child: Text('${post.gram}g'),
@@ -228,40 +247,42 @@ class _Content extends StatelessWidget {
             );
           },
         ),
-        Container(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              _showModalBottomSheet(
-                context: context,
-                child: const PostForm()
-              );
-            },
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.grey,
-                      width: 1,
+        dailyPosts.posts.length < 7
+            ? Container(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  _showModalBottomSheet(
+                    context: context,
+                    child: const PostForm()
+                  );
+                },
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.grey,
+                      ),
                     ),
-                  ),
-                  child: const Icon(
-                    Icons.add,
-                    color: Colors.grey,
-                  ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('Add new vege'),
+                    ),
+                  ],
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('Add new vege'),
-                ),
-              ],
-            ),
-          ),
-        ),
+              ),
+            )
+            : Container()
       ],
     );
   }

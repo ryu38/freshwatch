@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             home: Container(
               color: Colors.white,
-              child: const Text('Firebase Error'),
+              child: const Text('App Error'),
             ),
           );
         }
@@ -47,6 +47,11 @@ class MyApp extends StatelessWidget {
         }
 
         return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData.light().copyWith(
+            scaffoldBackgroundColor: const Color(0xfffafafa)
+          ),
+          darkTheme: ThemeData.dark(),
           home: Loading()
         );
       },

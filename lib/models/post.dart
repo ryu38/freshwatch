@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:freshwatch/features/local.dart';
 import 'package:freshwatch/models/user.dart';
 import 'package:freshwatch/service/firestore.dart';
+import 'package:freshwatch/utils/error_toast.dart';
 import 'package:intl/intl.dart';
 
 class VegePost {
@@ -51,11 +52,25 @@ class AllVegePosts with ChangeNotifier {
     final DateTime startDate;
     if (userData.isLogin) {
       final fsInstance = FirestoreService(userData.uid!);
-      posts = await fsInstance.getAllPosts;
-      startDate = await fsInstance.getStartDate;
+      try {
+        posts = await fsInstance.getAllPosts;
+        startDate = await fsInstance.getStartDate;
+      } catch (e) {
+        await ErrorToast.show(
+          'An Internet Error has occurred. The app could not read data.'
+        );
+        return Future.error(e);
+      }
     } else {
-      posts = await LocalData.loadAllPostLocal();
-      startDate = await LocalData.loadStartDate();
+      try {
+        posts = await LocalData.loadAllPostLocal();
+        startDate = await LocalData.loadStartDate();
+      } catch (e) {
+        await ErrorToast.show(
+          'A error occurred while reading data from local. The app could not read data.'
+        );
+        return Future.error(e);
+      }
     }
     return AllVegePosts(posts, startDate, userData);
   }
@@ -112,18 +127,30 @@ class DailyVegePosts with ChangeNotifier {
   }
 
   Future<void> _reflect() async {
-    final bool result;
+    bool result;
     if (_userData.isLogin) {
-      await FirestoreService(_userData.uid!).updateDailyData(this);
-      result = true;
+      try {
+        await FirestoreService(_userData.uid!).updateDailyData(this);
+        result = true;
+      } catch (e) {
+        await ErrorToast.show(
+          'An internet error has occurred. The post could not be saved.'
+        );
+        result = false;
+      }
     } else {
       result = await LocalData.addPostLocal(this);
+      if (!result) {
+        await ErrorToast.show(
+          'A error occurred while saving data in local. The post could not be saved.'
+        );
+      }
     }
 
     if (result) {
       await _allPosts.update();
     } else {
-      _posts.removeLast();
+      init(_allPosts);
     }
 
     notifyListeners();

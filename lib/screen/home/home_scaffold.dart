@@ -4,12 +4,14 @@ class HomeScaff extends StatelessWidget {
   HomeScaff({
     required this.content,
     this.scrollController,
-    Key? key 
-  }) : 
-    super(key: key);
+    this.floatingActionButton,
+    this.floatingActionButtonLocation
+  });
 
   final Widget content;
   final ScrollController? scrollController;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +26,8 @@ class HomeScaff extends StatelessWidget {
           child: content,
         ),
       ),
+      floatingActionButton: floatingActionButton,
+      floatingActionButtonLocation: floatingActionButtonLocation,
     );
   }
 }

@@ -10,14 +10,14 @@ class Loading extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppTitle(),
-            const SizedBox(height: 10),
-            const Text(
-              'Loading ...',
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            AppTitle(fontSize: 32),
+            // const SizedBox(height: 10),
+            // const Text(
+            //   'Loading ...',
+            //   style: TextStyle(
+            //     fontSize: 14,
+            //   ),
+            // ),
           ],
         ),
       ),

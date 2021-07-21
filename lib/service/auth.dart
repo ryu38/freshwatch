@@ -1,13 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:freshwatch/models/user.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final _auth = FirebaseAuth.instance;
 
   // create user obj based on FirebaseUser
   UserData _userFromFirebaseUser(User? user) {
-    return user != null ? UserData(uid: user.uid) : UserData();
+    return UserData(uid: user?.uid, email: user?.email);
   }
 
   // auth change user stream
@@ -16,27 +17,32 @@ class AuthService {
         .map(_userFromFirebaseUser);
   }
 
-  // sign in anon
-  Future signInAnon() async {
+  // Google auth
+  Future<User?> signInGoogle() async {
     try {
-      final result = await _auth.signInAnonymously();
-      final user = result.user;
-      return user;
+      final account = await GoogleSignIn().signIn();
+      if (account == null) {
+        return null;
+      }
+      final googleAuth = await account.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      final result = await _auth.signInWithCredential(credential);
+      return result.user;
     } catch (e) {
-      print(e.toString());
       return null;
     }
   }
 
   // sign out
-  Future<String?> signOut() async {
+  Future<bool> signOut() async {
     try {
       await _auth.signOut();
+      return true;
     } catch (e) {
-      return e.toString();
+      return false;
     }
   }
-
-  // sign in with google account authentication
-
 }

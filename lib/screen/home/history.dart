@@ -3,6 +3,7 @@ import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
 import 'package:freshwatch/screen/home/daily_veges.dart';
 import 'package:freshwatch/screen/home/home_scaffold.dart';
+import 'package:freshwatch/theme/colors.dart';
 import 'package:freshwatch/widgets/card.dart';
 import 'package:provider/provider.dart';
 
@@ -66,6 +67,22 @@ class _HistoryState extends State<History> {
   Widget build(BuildContext context) {
     return HomeScaff(
       scrollController: _scrollController,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: FloatingActionButton(
+          elevation: 0,
+          backgroundColor: AppColors.main,
+          mini: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
       content: Column(
         children: <Widget>[
           const Padding(

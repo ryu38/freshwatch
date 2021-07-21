@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:freshwatch/utils/error_toast.dart';
 import 'package:path/path.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -16,7 +17,6 @@ class StorageService {
       await storage.ref().child(uid).child(filename).putFile(file);
       return filename;
     } catch (e) {
-      print(e);
       return '';
     }
   }
