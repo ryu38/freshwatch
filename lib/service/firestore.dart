@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:freshwatch/features/local.dart';
 import 'package:freshwatch/models/post.dart';
 import 'package:intl/intl.dart';

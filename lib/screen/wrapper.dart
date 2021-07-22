@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:freshwatch/features/local.dart';
 import 'package:freshwatch/screen/authenticate/init_page.dart';
-import 'package:freshwatch/service/auth.dart';
 import 'package:freshwatch/widgets/loading.dart';
 import 'package:provider/provider.dart';
 import 'package:freshwatch/screen/home/home.dart';

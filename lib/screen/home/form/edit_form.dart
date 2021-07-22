@@ -239,7 +239,6 @@ class _EditFormState extends State<EditForm> {
                   ),
                   primary: AppColors.main,
                 ),
-                child: const Text('save'),
                 onPressed: () async {
                   if (_formKey.currentState?.validate() == true) {
                     Navigator.pop(context);
@@ -254,6 +253,7 @@ class _EditFormState extends State<EditForm> {
                     await dailyPosts.updatePost(widget.index, newPost);
                   }
                 },
+                child: const Text('save'),
               ),
             ),
           ),

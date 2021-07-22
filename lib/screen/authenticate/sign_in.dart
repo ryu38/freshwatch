@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:freshwatch/features/local.dart';
 import 'package:freshwatch/service/auth.dart';
 import 'package:freshwatch/theme/colors.dart';
-import 'package:freshwatch/utils/error_message.dart';
+import 'package:freshwatch/utils/error_toast.dart';
 import 'package:freshwatch/widgets/card.dart';
 import 'package:freshwatch/widgets/title.dart';
 
@@ -71,7 +71,7 @@ class _SignInState extends State<SignIn> {
                         onPressed: () async {
                           final result = await _auth.signInGoogle();
                           if (result == null) {
-                            ErrorToast.show(
+                            await ErrorToast.show(
                               'A error has occurred. Failed to sign in.'
                             );
                           } else {

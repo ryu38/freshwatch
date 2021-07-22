@@ -132,9 +132,9 @@ class _PostFormState extends State<PostForm> {
       );
     }
 
-    inputDecoration({String? hintText, String? suffixText}) {
+    InputDecoration inputDecoration({String? hintText, String? suffixText}) {
 
-      outlineInputBorder(Color color, double width) => OutlineInputBorder(
+      OutlineInputBorder outlineInputBorder(Color color, double width) => OutlineInputBorder(
         borderRadius: BorderRadius.circular(90),
         borderSide: BorderSide(color: color, width: width),
       );
@@ -215,7 +215,6 @@ class _PostFormState extends State<PostForm> {
                   ),
                   primary: AppColors.main,
                 ),
-                child: const Text('add'),
                 onPressed: () async {
                   if (_formKey.currentState?.validate() == true) {
                     Navigator.pop(context);
@@ -227,6 +226,7 @@ class _PostFormState extends State<PostForm> {
                     await dailyPosts.addPost(newPost);
                   }
                 },
+                child: const Text('add'),
               ),
             ),
           ),

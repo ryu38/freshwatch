@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:freshwatch/features/local.dart';
-import 'package:freshwatch/screen/authenticate/sign_in.dart';
 import 'package:freshwatch/theme/colors.dart';
 import 'package:freshwatch/widgets/title.dart';
 
@@ -72,9 +71,9 @@ class InitialPage extends StatelessWidget {
                     }
                   ),
                   const SizedBox(height: 32),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: const Text(
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
                       'If you have your own account, '
                       'you can save your data to online cloud '
                       'and even if you lose this app, '

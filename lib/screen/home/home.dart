@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:freshwatch/features/local.dart';
 import 'package:freshwatch/models/cache.dart';
 import 'package:freshwatch/models/date.dart';
 import 'package:freshwatch/models/post.dart';
@@ -11,7 +9,6 @@ import 'package:freshwatch/screen/home/history.dart';
 import 'package:freshwatch/screen/home/home_scaffold.dart';
 import 'package:freshwatch/screen/home/retry.dart';
 import 'package:freshwatch/service/auth.dart';
-import 'package:freshwatch/service/firestore.dart';
 import 'package:freshwatch/theme/colors.dart';
 import 'package:freshwatch/utils/error_toast.dart';
 import 'package:freshwatch/widgets/card.dart';
@@ -279,14 +276,6 @@ class _Content extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-          DashboardCard(
-            content: ElevatedButton(
-              onPressed: () async {
-                await LocalData.resetInitFlag();
-              }, 
-              child: const Text('set init')
-            )
           ),
         ],
       ),
