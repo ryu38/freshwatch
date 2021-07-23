@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
               theme: ThemeData.light().copyWith(
                 scaffoldBackgroundColor: const Color(0xfffafafa)
               ),
-              darkTheme: ThemeData.dark(),
+              // darkTheme: ThemeData.dark(),
               initialRoute: '/',
               routes: <String, WidgetBuilder>{
                 '/': (BuildContext context) => Wrapper(),

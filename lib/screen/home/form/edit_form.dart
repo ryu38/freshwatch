@@ -172,7 +172,7 @@ class _EditFormState extends State<EditForm> {
           SizedBox(
             width: double.infinity,
             child: Text(
-              'Adding new Vege',
+              'Editing Vege',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
