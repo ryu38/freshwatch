@@ -1,16 +1,27 @@
-# freshwatch
+# FreshWatch
+My first Flutter app for registration the amount of vegetables a user eats per day.  
+350g of vegetables is the target daily intake in this app.
 
-A new Flutter project.
+<img src="https://user-images.githubusercontent.com/58480791/157446674-6ed932a0-cea7-467f-a302-69855908e020.gif" width=300>
 
-## Getting Started
+## Screenshots
+![Screenshot_1646840943](https://user-images.githubusercontent.com/58480791/157477777-be93e509-f3de-4030-8123-1ca84ceab991.png)
+![Screenshot_1646840939](https://user-images.githubusercontent.com/58480791/157477668-b45549b1-c622-4324-ae11-b38097795dcf.png)
 
-This project is a starting point for a Flutter application.
+## Features
+#### 🥕 Record of vegetables
+The app enables a user to register the name of vegetables they ate, its intake and image.
+Of course, a user can also update and delete those.  
+The indicator of a daily intake displayed as well.
+If the intake reaches 350g, the indicator is filled up to the maximum.
 
-A few resources to get you started if this is your first Flutter project:
+#### 📊 Display weekly intakes in a bar chart
+A user can check intakes of vegetables per day in the last week.
+Displaying these in a bar chart makes it easy to compare intakes.
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+#### 🗓 Store all data from oldest to latest
+In History Screen, a user can find all data registered.
+In Addition, If you sign in with your google account, all data is stored in cloud.
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Architecture
+Flutter with Provider for State Management + Firebase for Authentication, DataBase and Storage
