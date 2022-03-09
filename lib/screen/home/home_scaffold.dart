@@ -16,11 +16,18 @@ class HomeScaff extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(0),
+        child: AppBar(
+          backgroundColor: Colors.white.withOpacity(0),
+          elevation: 0,
+        ),
+      ),
       body: SingleChildScrollView(
         controller: scrollController,
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            vertical: 20, horizontal: 10
+          padding: const EdgeInsets.only(
+            bottom: 20, left: 10, right: 10,
           ),
           width: double.infinity,
           child: content,

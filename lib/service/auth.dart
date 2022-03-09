@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:freshwatch/models/user.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
-
   final _auth = FirebaseAuth.instance;
 
   // create user obj based on FirebaseUser
@@ -13,8 +13,7 @@ class AuthService {
 
   // auth change user stream
   Stream<UserData> get user {
-    return _auth.authStateChanges()
-        .map(_userFromFirebaseUser);
+    return _auth.authStateChanges().map(_userFromFirebaseUser);
   }
 
   // Google auth

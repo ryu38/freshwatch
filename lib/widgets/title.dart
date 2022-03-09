@@ -18,13 +18,13 @@ class AppTitle extends StatelessWidget {
         ),
         children: [
           const TextSpan(
-            text: 'Yasai',
+            text: 'Fresh',
             style: TextStyle(
               color: Color(0xff56ad54)
             ),
           ),
           const TextSpan(
-            text: 'Query',
+            text: 'Watch',
             style: TextStyle(
               color: Color(0xff026500)
             ),
